@@ -1,0 +1,10 @@
+{
+  "domain": "mysmareader",
+  "name": "My SMA Reader",
+  "codeowners": ["@karelvdvd"],
+  "config_flow": true,
+  "documentation": "https://github.com/karelvdvd/MySMAReaderIntegratie",
+  "iot_class": "local_polling",
+  "requirements": ["pymodbus==3.8.6"],
+  "version": "0.1.0"
+}
