@@ -23,7 +23,11 @@ async def read_current_power(hass, host, port):
     """Read current PV power from SMA inverter."""
 
     def _read():
-        client = ModbusTcpClient(host=host, port=port, timeout=5)
+        client = ModbusTcpClient(
+            host=host,
+            port=port,
+            timeout=5,
+        )
 
         try:
             if not client.connect():
@@ -32,20 +36,27 @@ async def read_current_power(hass, host, port):
             result = client.read_holding_registers(
                 address=30775,
                 count=2,
-                slave=SMA_UNIT_ID,
+                device_id=SMA_UNIT_ID,
             )
 
             if result.isError():
                 return None
 
-            registers = result.registers
+            if len(result.registers) < 2:
+                return None
 
-            value = (registers[0] << 16) + registers[1]
+            value = (
+                (result.registers[0] << 16)
+                + result.registers[1]
+            )
 
             if value >= 0x80000000:
                 value -= 0x100000000
 
             return value
+
+        except Exception:
+            return None
 
         finally:
             client.close()
