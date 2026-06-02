@@ -1,1 +1,2 @@
-"""SMA communication module."""
+async def test_connection(host, port):
+    ...
