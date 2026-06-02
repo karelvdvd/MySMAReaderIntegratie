@@ -4,19 +4,20 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfTemperature
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_HOST, CONF_PORT
-from .sma import read_sma_data
+from .const import DOMAIN
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up SMA sensors."""
 
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+
     async_add_entities(
         [
             MySMASensor(
-                hass,
-                entry,
+                coordinator,
                 key="current_power",
                 name="My SMA Current Power",
                 unit=UnitOfPower.WATT,
@@ -24,8 +25,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 state_class=SensorStateClass.MEASUREMENT,
             ),
             MySMASensor(
-                hass,
-                entry,
+                coordinator,
                 key="energy_today",
                 name="My SMA Energy Today",
                 unit=UnitOfEnergy.KILO_WATT_HOUR,
@@ -34,8 +34,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 scale=0.001,
             ),
             MySMASensor(
-                hass,
-                entry,
+                coordinator,
                 key="temperature",
                 name="My SMA Temperature",
                 unit=UnitOfTemperature.CELSIUS,
@@ -43,18 +42,16 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 state_class=SensorStateClass.MEASUREMENT,
                 scale=0.1,
             ),
-        ],
-        True,
+        ]
     )
 
 
-class MySMASensor(SensorEntity):
+class MySMASensor(CoordinatorEntity, SensorEntity):
     """SMA sensor."""
 
     def __init__(
         self,
-        hass,
-        entry,
+        coordinator,
         key,
         name,
         unit,
@@ -62,9 +59,8 @@ class MySMASensor(SensorEntity):
         state_class,
         scale=1,
     ):
-        self.hass = hass
-        self.host = entry.data[CONF_HOST]
-        self.port = entry.data[CONF_PORT]
+        super().__init__(coordinator)
+
         self.key = key
         self.scale = scale
 
@@ -73,21 +69,14 @@ class MySMASensor(SensorEntity):
         self._attr_native_unit_of_measurement = unit
         self._attr_device_class = device_class
         self._attr_state_class = state_class
-        self._attr_native_value = None
 
-    async def async_update(self):
-        """Update sensor."""
+    @property
+    def native_value(self):
+        """Return sensor value."""
 
-        data = await read_sma_data(
-            self.hass,
-            self.host,
-            self.port,
-        )
-
-        value = data.get(self.key)
+        value = self.coordinator.data.get(self.key)
 
         if value is None:
-            self._attr_native_value = None
-            return
+            return None
 
-        self._attr_native_value = round(value * self.scale, 2)
+        return round(value * self.scale, 2)
