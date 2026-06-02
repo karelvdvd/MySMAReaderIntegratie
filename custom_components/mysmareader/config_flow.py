@@ -4,6 +4,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 
+from .sma import test_connection
 from .const import (
     CONF_HOST,
     CONF_PORT,
@@ -22,12 +23,6 @@ class MySMAReaderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
 
-        if user_input is not None:
-            return self.async_create_entry(
-                title=user_input[CONF_HOST],
-                data=user_input,
-            )
-
         schema = vol.Schema(
             {
                 vol.Required(CONF_HOST): str,
@@ -41,6 +36,26 @@ class MySMAReaderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ): int,
             }
         )
+
+        if user_input is not None:
+
+            can_connect = await test_connection(
+                self.hass,
+                user_input[CONF_HOST],
+                user_input[CONF_PORT],
+            )
+
+            if can_connect:
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST],
+                    data=user_input,
+                )
+
+            return self.async_show_form(
+                step_id="user",
+                data_schema=schema,
+                errors={"base": "cannot_connect"},
+            )
 
         return self.async_show_form(
             step_id="user",
