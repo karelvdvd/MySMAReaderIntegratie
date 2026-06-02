@@ -10,7 +10,7 @@ from .sma import read_current_power
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up sensors."""
+    """Set up SMA sensors."""
 
     async_add_entities(
         [
@@ -21,7 +21,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 
 class MySMAPowerSensor(SensorEntity):
-    """SMA current power sensor."""
+    """Current SMA power sensor."""
 
     _attr_name = "My SMA Current Power"
     _attr_unique_id = "mysma_current_power"
@@ -36,7 +36,7 @@ class MySMAPowerSensor(SensorEntity):
         self._attr_native_value = None
 
     async def async_update(self):
-        """Update sensor value."""
+        """Update sensor."""
 
         self._attr_native_value = await read_current_power(
             self.hass,
