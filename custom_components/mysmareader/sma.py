@@ -19,44 +19,42 @@ async def test_connection(hass, host, port, timeout=5):
     return await hass.async_add_executor_job(_test)
 
 
-async def read_current_power(hass, host, port):
-    """Read current PV power from SMA inverter."""
+def _read_s32(client, address):
+    result = client.read_holding_registers(
+        address=address,
+        count=2,
+        device_id=SMA_UNIT_ID,
+    )
+
+    if result.isError() or len(result.registers) < 2:
+        return None
+
+    value = (result.registers[0] << 16) + result.registers[1]
+
+    if value >= 0x80000000:
+        value -= 0x100000000
+
+    return value
+
+
+async def read_sma_data(hass, host, port):
+    """Read SMA inverter data."""
 
     def _read():
-        client = ModbusTcpClient(
-            host=host,
-            port=port,
-            timeout=5,
-        )
+        client = ModbusTcpClient(host=host, port=port, timeout=5)
 
         try:
             if not client.connect():
-                return None
+                return {}
 
-            result = client.read_holding_registers(
-                address=30775,
-                count=2,
-                device_id=SMA_UNIT_ID,
-            )
-
-            if result.isError():
-                return None
-
-            if len(result.registers) < 2:
-                return None
-
-            value = (
-                (result.registers[0] << 16)
-                + result.registers[1]
-            )
-
-            if value >= 0x80000000:
-                value -= 0x100000000
-
-            return value
+            return {
+                "current_power": _read_s32(client, 30775),
+                "energy_today": _read_s32(client, 30535),
+                "temperature": _read_s32(client, 30953),
+            }
 
         except Exception:
-            return None
+            return {}
 
         finally:
             client.close()
