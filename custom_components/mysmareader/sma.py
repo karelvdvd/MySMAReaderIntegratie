@@ -1,0 +1,1 @@
+"""SMA communication module."""
