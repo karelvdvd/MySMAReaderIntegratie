@@ -41,7 +41,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 unit=UnitOfTemperature.CELSIUS,
                 device_class=SensorDeviceClass.TEMPERATURE,
                 state_class=SensorStateClass.MEASUREMENT,
-                scale=0.01,
+                scale=0.1,
             ),
         ],
         True,

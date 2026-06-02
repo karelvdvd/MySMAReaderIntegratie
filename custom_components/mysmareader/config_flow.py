@@ -47,7 +47,7 @@ class MySMAReaderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if can_connect:
                 return self.async_create_entry(
-                    title=user_input[CONF_HOST],
+                    title="SMA Omvormer",
                     data=user_input,
                 )
 

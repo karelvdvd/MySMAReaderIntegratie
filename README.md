@@ -1,3 +1,5 @@
+![DVS Filter](images/logo.png)
+
 # My SMA Reader
 
 A custom Home Assistant integration for reading data from older SMA inverters over Modbus TCP.
