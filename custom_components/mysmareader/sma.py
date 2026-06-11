@@ -4,6 +4,7 @@ from pymodbus.client import ModbusTcpClient
 
 
 SMA_UNIT_ID = 3
+SMA_INVALID_U32 = 0x80000000
 
 
 async def test_connection(hass, host, port, timeout=5):
@@ -29,19 +30,26 @@ def _read_s32(client, address):
     if result.isError() or len(result.registers) < 2:
         return None
 
-    value = (result.registers[0] << 16) + result.registers[1]
+    raw_value = (result.registers[0] << 16) + result.registers[1]
 
-    if value >= 0x80000000:
-        value -= 0x100000000
+    if raw_value == SMA_INVALID_U32:
+        return None
 
-    return value
+    if raw_value >= 0x80000000:
+        raw_value -= 0x100000000
+
+    return raw_value
 
 
 async def read_sma_data(hass, host, port):
     """Read SMA inverter data."""
 
     def _read():
-        client = ModbusTcpClient(host=host, port=port, timeout=5)
+        client = ModbusTcpClient(
+            host=host,
+            port=port,
+            timeout=5,
+        )
 
         try:
             if not client.connect():
