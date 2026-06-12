@@ -1,5 +1,6 @@
 import socket
 import logging
+import time
 
 from pymodbus.client import ModbusTcpClient
 
@@ -77,7 +78,7 @@ async def read_sma_data(hass, host, port):
         client = ModbusTcpClient(
             host=host,
             port=port,
-            timeout=5,
+            timeout=8,
         )
 
         try:
@@ -89,11 +90,15 @@ async def read_sma_data(hass, host, port):
 
             _LOGGER.debug("Connected to SMA inverter %s:%s", host, port)
 
-            data = {
-                "current_power": _read_s32(client, 30775, "current_power"),
-                "energy_today": _read_s32(client, 30535, "energy_today"),
-                "temperature": _read_s32(client, 30953, "temperature"),
-            }
+            data = {}
+
+            data["current_power"] = _read_s32(client, 30775, "current_power")
+            time.sleep(0.3)
+
+            data["energy_today"] = _read_s32(client, 30535, "energy_today")
+            time.sleep(0.3)
+
+            data["temperature"] = _read_s32(client, 30953, "temperature")
 
             _LOGGER.debug("SMA data read complete: %s", data)
 
